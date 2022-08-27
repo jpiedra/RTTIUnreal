@@ -8,4 +8,4 @@ To quickly launch game server locally for testing:
 `.\util\server.ps1`
 
 To send data to the RTTIServer instance:
-`echo "hello there"|netcat server_ip port`
+`echo "jaypeezy?skaartrooper?special"|netcat server_ip server_port`
