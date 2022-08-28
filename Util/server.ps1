@@ -3,4 +3,4 @@ Write-Host "`$env:UnrealPath = 'C:\Unreal227J'"
 
 $cmd = "$($env:UnrealPath)\System\ucc.exe"
 
-& $cmd server map=Maps\DmAriza.unr?game=UnrealShare.DeathMatchGame?mutator=RTTIUnreal.RTTIUnreal
+& $cmd server map=Maps\DmStomp.unr?game=UnrealShare.DeathMatchGame?mutator=RTTIUnreal.RTTIUnreal

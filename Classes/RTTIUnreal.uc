@@ -58,35 +58,46 @@ function HandleAct() {
 		actArgs = ParseDelimited(actString,"?",3);
 
 		log("[RTTIUnreal] Handling act '"$actName$"' started by '"$actOwner$"' (args: '"$actArgs$"')");
-		RunAct(actString, actOwner, actName, actArgs);
+		RunAct(actOwner, actName, actArgs);
 		// BroadcastMessage(actString, true, 'CriticalEvent');
 	}
 }
 
-function RunAct(string actString, string actOwner, string actName, string actArgs) {
+function RunAct(string actOwner, string actName, string actArgs) {
+	local bool isActSuccessful;
+	
+	log("[RTTIUnreal] Running act '"$actName$"' started by '"$actOwner$"' (args: '"$actArgs$"')");
+	
 	// running list of available actions that can be initiated
 	switch( actName )
 	{
-		case "spawn_monster":
-			log("[RTTIUnreal] Running act '"$actName$"' started by '"$actOwner$"' (args: '"$actArgs$"')");
-			if (SpawnMonster(actOwner, actArgs)) {
-				log("[RTTIUnreal] Successfully ran act '"$actName$"' started by '"$actOwner$"' (args: '"$actArgs$"')");
-			} else {
-				log("[RTTIUnreal] Failed to run act '"$actName$"' started by '"$actOwner$"' (args: '"$actArgs$"')");
-			}
+		case "spawn_monster":		
+			isActSuccessful = (SpawnMonster(actOwner, actArgs));
 			break;
-		case "spawn_earthquake":
-			log("[RTTIUnreal] Running act '"$actName$"' started by '"$actOwner$"' (args: '"$actArgs$"')");
+		case "spawn_monster":		
+			isActSuccessful = (SpawnMonster(actOwner, actArgs));
 			break;
-		case "kill_monsters":
-			log("[RTTIUnreal] Running act '"$actName$"' started by '"$actOwner$"' (args: '"$actArgs$"')");
-			break;
-		case "kill_all":
-			log("[RTTIUnreal] Running act '"$actName$"' started by '"$actOwner$"' (args: '"$actArgs$"')");
-			break;
+		// case "change_music":
+		// 	isActSuccessful = (ChangeMusic(actOwner, actArgs));
+		// 	break;
+		// case "spawn_earthquake":
+		// 	isActSuccessful = (SpawnEarthquake(actOwner, actArgs));
+		// 	break;
+		// case "kill_monsters":
+		// 	isActSuccessful = (KillMonsters(actOwner, actArgs));
+		// 	break;
+		// case "kill_all":
+		// 	isActSuccessful = (KillAll(actOwner, actArgs));
+		// 	break;
 		default:
-			log("[RTTIUnreal] Could not find act '"$actName$"' requested by '"$actOwner$"'");
+			log("[RTTIUnreal] No act named '"$actName$"' exists!");
 			break;
+	}
+
+	if (isActSuccessful) {
+		log("[RTTIUnreal] Successfully ran act '"$actName$"' started by '"$actOwner$"' (args: '"$actArgs$"')");
+	} else {
+		log("[RTTIUnreal] Failed to run act '"$actName$"' started by '"$actOwner$"' (args: '"$actArgs$"')");
 	}
 }
 
@@ -122,6 +133,39 @@ function bool SpawnMonster(string actOwner, string actArgs) {
 
 	return isMonsterSpawned;
 }
+
+// doesn't work
+// function bool ChangeMusic(string actOwner, string actArgs) {
+// 	local MusicEvent me;
+// 	local Music mo;
+// 	local Trigger tr;
+// 	local Name id;
+
+// 	id = StringToName(actOwner);
+
+// 	mo = Music(DynamicLoadObject(actArgs, Class'Music'));
+// 	if (mo != None) {
+// 		// spawn a MusicEvent actor, populate the fields and trigger it
+// 		me = Spawn(class'MusicEvent', Self);
+// 		if (me != None) {
+// 			me.Tag = id;
+// 			me.Song = mo;
+// 			tr = Spawn(class'Trigger', Self);
+// 			if (tr != None) {
+// 				tr.Event = id;
+// 				tr.TriggerType = TT_AnyProximity;
+// 				// tr.CollisionHeight = 100000002537764290115403776.000000;
+// 				// tr.CollisionRadius = 100000002537764290115403776.000000;
+// 				tr.bTriggerOnceOnly = true;
+// 				// tr.Trigger(Self, None);
+// 				log(mo$"; "$me$"; "$tr$"; "$id);
+// 				return true;
+// 			}
+// 		}
+// 	} else {
+// 		return false;
+// 	}	
+// }
 
 // Helper methods
 function vector GetSpawnPoint() {
