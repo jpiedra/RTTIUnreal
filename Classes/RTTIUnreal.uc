@@ -31,7 +31,7 @@ function HandleAct() {
 
 	actNum = rttiActQueue.GetQueueSize();
 	if (actNum != 0) {
-		actString =  rttiActQueue.PopAct();
+		actString = rttiActQueue.PopAct();
 
 		actOwner = ParseDelimited(actString,"?",1);
 		actName = ParseDelimited(actString,"?",2);
@@ -39,10 +39,11 @@ function HandleAct() {
 
 		log("[RTTIUnreal] Processing act '"$actName$"' started by '"$actOwner$"' (type: '"$actType$"')");
 		BroadcastMessage(actString, true, 'CriticalEvent');
+
 	}
 }
 
-// based on UBrowserBufferedTcpLink
+// shamelessly yanked from UBrowserBufferedTcpLink
 function string ParseDelimited(string Text, string Delimiter, int Count, optional bool bToEndOfLine)
 {
 	local string Result;
@@ -76,12 +77,3 @@ function string ParseDelimited(string Text, string Delimiter, int Count, optiona
 
 	return Result;
 }
-
-// doesnt work in unreal, ut99 only
-// function bool HandleEndGame() {
-// 	SetTimer(0, False);	
-	
-// 	if ( NextMutator != None )
-// 		return NextMutator.HandleEndGame();
-// 	return false;
-// }

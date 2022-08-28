@@ -17,17 +17,6 @@ function bool AddQueueAct( RTTIActQueue actQueue, string actString) {
 
 event Spawned()
 {
-    // local RTTIActQueue A;
-
-    // // we only want the first instance of RTTIActQueue
-    // foreach AllActors( class 'RTTIActQueue', A)
-    // {
-    //     if( A.IsA('RTTIActQueue') )
-    //     {
-    //         aq = A;
-    //         break;
-    //     }
-    // }
     local Mutator mut;
 
     log('[RTTIServerAcceptor] Spawned a ServerAcceptor');
@@ -59,16 +48,6 @@ event ReceivedLine( string Line )
     log("[RTTIServerAcceptor] Received line: "$line);
     log("[RTTIServerAcceptor] Processing line via action queue...");
 
-    // make something happen inside the current game...
-    // if(aq != None) {
-    //     if(!AddQueueAct(aq, line)) {
-    //         SendText("[RTTIServerAcceptor] Could not add to action queue: "$line);
-    //     } else {
-    //         SendText("[RTTIServerAcceptor] Received and added to action queue: "$line);
-    //         SendText("[RTTIServerAcceptor] Closing connection...");
-    //     }
-    // }
-
     if(aq != None) {
         aq.PrintSelf();
         aq.AddAct(Line);
@@ -82,8 +61,5 @@ event Closed()
 {
     aq = None;
     Log("[RTTIServerAcceptor] Connection closed");
-    // It's important to destroy the object so that the parent knows
-    // about it and can handle the closed connection. You can not
-    // reuse acceptor instances.
  	Destroy();
 }

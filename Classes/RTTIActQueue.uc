@@ -12,7 +12,11 @@ function PrintSelf() {
     log('[RTTIActQueue] This is: '$Self.GetPointerName());
 }
 
-function bool AddAct( String actString ) {    
+function bool AddAct( String actString ) {
+    // get rid of newline characters and carriage returns
+    actString = ReplaceStr(actString,"\n","");
+    actString = ReplaceStr(actString,"\r","");
+
     if (ActNum >= 255) {
         log('[RTTIActQueue] Queue is full, could not add pending action');
         // respond somehow?
