@@ -8,4 +8,5 @@ To quickly launch game server locally for testing:
 `.\util\server.ps1`
 
 To send data to the RTTIServer instance:
-`echo "jaypeezy?skaartrooper?special"|netcat server_ip server_port`
+`echo "EVENT_OWNER?EVENT_NAME?EVENT_ARGS"|netcat server_ip server_port`
+`echo "jaypeezy?spawn_monster?unreali.skaarjwarrior"|netcat 127.0.0.1 5900`

@@ -7,7 +7,7 @@ function PreBeginPlay() {
     ActNum = 0;
 }
 
-// lil debugging method to ensure we don't get more than one object somehow
+// debugging method to ensure we don't get more than one object somehow
 function PrintSelf() {
     log('[RTTIActQueue] This is: '$Self.GetPointerName());
 }

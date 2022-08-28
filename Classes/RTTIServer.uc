@@ -61,7 +61,7 @@ event LostChild( Actor C )
 
 defaultproperties
 {
-    ListenPort=3742
+    ListenPort=5900
     MaxClients=2    
     AcceptClass=Class'RTTIUnreal.RTTIServerAcceptor'
 }
