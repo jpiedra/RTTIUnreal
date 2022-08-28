@@ -135,37 +135,33 @@ function bool SpawnMonster(string actOwner, string actArgs) {
 }
 
 // doesn't work
-// function bool ChangeMusic(string actOwner, string actArgs) {
-// 	local MusicEvent me;
-// 	local Music mo;
-// 	local Trigger tr;
-// 	local Name id;
+function bool ChangeMusic(string actOwner, string actArgs) {
+	local MusicEvent me;
+	local Music mo;
+	local Trigger tr;
+	local Name id;
 
-// 	id = StringToName(actOwner);
+	id = StringToName(actOwner);
 
-// 	mo = Music(DynamicLoadObject(actArgs, Class'Music'));
-// 	if (mo != None) {
-// 		// spawn a MusicEvent actor, populate the fields and trigger it
-// 		me = Spawn(class'MusicEvent', Self);
-// 		if (me != None) {
-// 			me.Tag = id;
-// 			me.Song = mo;
-// 			tr = Spawn(class'Trigger', Self);
-// 			if (tr != None) {
-// 				tr.Event = id;
-// 				tr.TriggerType = TT_AnyProximity;
-// 				// tr.CollisionHeight = 100000002537764290115403776.000000;
-// 				// tr.CollisionRadius = 100000002537764290115403776.000000;
-// 				tr.bTriggerOnceOnly = true;
-// 				// tr.Trigger(Self, None);
-// 				log(mo$"; "$me$"; "$tr$"; "$id);
-// 				return true;
-// 			}
-// 		}
-// 	} else {
-// 		return false;
-// 	}	
-// }
+	mo = Music(DynamicLoadObject(actArgs, Class'Music'));
+	if (mo != None) {
+		// spawn a MusicEvent actor, populate the fields and trigger it
+		me = Spawn(class'MusicEvent', Self);
+		if (me != None) {
+			me.Tag = id;
+			me.Song = mo;
+			tr = Spawn(class'Trigger', Self);
+			if (tr != None) {
+				tr.Event = id;
+				tr.Trigger(Self, None);
+				log(mo$"; "$me$"; "$tr$"; "$id);
+				return true;
+			}
+		}
+	} else {
+		return false;
+	}	
+}
 
 // Helper methods
 function vector GetSpawnPoint() {
