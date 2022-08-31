@@ -169,12 +169,9 @@ function bool SpawnItem(string actOwner, string actArgs) {
 		if (NewInventory != None) {
 			log("[RTTIUnreal] Spawned item "$NewInventory$ " and trying to assign to player...");
 
-			NewInventory.LifeSpan = NewInventory.default.LifeSpan; // prevents destruction when spawning in destructive zones (thanks Waffnuffly)
+			NewInventory.LifeSpan = NewInventory.default.LifeSpan; // prevents destruction when spawning in destructive zones				
 			NewInventory.Touch(randomPlayer); // make the item register a touch immediately with the randomly selected player
-			if (bActivate) {
-				NewInventory.Activate();
-			}
-
+			
 			isItemSpawned = true;
 		}
 	}
