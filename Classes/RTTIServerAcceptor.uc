@@ -63,3 +63,8 @@ event Closed()
     Log("[RTTIServerAcceptor] Connection closed");
  	Destroy();
 }
+
+defaultproperties
+{
+    bHidden=true
+}

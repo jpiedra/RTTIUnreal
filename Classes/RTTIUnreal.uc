@@ -9,9 +9,10 @@ var int spawnAttempts;
 
 // Gameloop and timer
 function PreBeginPlay() {
-	SetTimer(5, True);
+	Super.PreBeginPlay();
 	Level.Game.bHumansOnly = false;
 	Level.Game.bNoMonsters = false;
+	SetTimer(5, True);
 }
 
 function PostBeginPlay() {
@@ -19,6 +20,7 @@ function PostBeginPlay() {
 
 	spawnPoints = 0;
 	
+	Super.PostBeginPlay();
 	rttiActQueue = Spawn(class'RTTIUnreal.RTTIActQueue', Self);
 	rttiServer = Spawn(class'RTTIUnreal.RTTIServer', Self);
 	spawnAttempts = 5; // configure via .ini
@@ -33,9 +35,14 @@ function PostBeginPlay() {
 			spawnPoints++;
 		}
 	}
+
+	bAlwaysRelevant = true;
+	if(Level.Netmode == NM_DedicatedServer)
+		return;
+
 }
 
-simulated function Timer() {
+function Timer() {
 	HandleAct();
 }
 
@@ -74,12 +81,9 @@ function RunAct(string actOwner, string actName, string actArgs) {
 		case "spawn_monster":		
 			isActSuccessful = (SpawnMonster(actOwner, actArgs));
 			break;
-		case "spawn_monster":		
-			isActSuccessful = (SpawnMonster(actOwner, actArgs));
+		case "change_music":
+			isActSuccessful = (ChangeMusic(actOwner, actArgs));
 			break;
-		// case "change_music":
-		// 	isActSuccessful = (ChangeMusic(actOwner, actArgs));
-		// 	break;
 		// case "spawn_earthquake":
 		// 	isActSuccessful = (SpawnEarthquake(actOwner, actArgs));
 		// 	break;
@@ -105,6 +109,7 @@ function RunAct(string actOwner, string actName, string actArgs) {
 function bool SpawnMonster(string actOwner, string actArgs) {
 	local int i;
 	local ScriptedPawn NewMonster;
+	local PawnTeleportEffect SpawnEffect;
 	local bool isMonsterSpawned;
 	local vector SpawnPoint;
 	local class<ScriptedPawn> MonsterClass;
@@ -118,12 +123,16 @@ function bool SpawnMonster(string actOwner, string actArgs) {
 	}
 
 	for (i = 0; i < spawnAttempts; i++) {	
+		log("[RTTIUnreal] Trying to spawn "$MonsterClass$ " - attempt "$i+1);
 		SpawnPoint = GetSpawnPoint();
 		NewMonster = Spawn(MonsterClass,self,,SpawnPoint);
 		if (NewMonster != None) {
 			Log("[RTTIUnreal] Successfully spawned for '"$actOwner$"' - '"$actArgs$"'!");
 			isMonsterSpawned = true;
-			Spawn(class'ReSpawn', self, , SpawnPoint);
+			// try to spawn special effect
+			SpawnEffect = Spawn(class'UnrealShare.PawnTeleportEffect');
+			// how to spawn an effect???
+			// Spawn(class'Unrealshare.TeleportEffect', self, , SpawnPoint);
 			// modify pawn props here
 			// NewMonster.Health = NewMonster.default.Health * class'MonsterCycle'.default.HealthMultiplier;
 			NewMonster.GotoState('Wandering');
@@ -136,31 +145,34 @@ function bool SpawnMonster(string actOwner, string actArgs) {
 
 // doesn't work
 function bool ChangeMusic(string actOwner, string actArgs) {
-	local MusicEvent me;
-	local Music mo;
-	local Trigger tr;
-	local Name id;
+	local Music Song;
+	local byte SongSection; 
+	local byte CdTrack; // unused
+	local PlayerPawn LocalPlayer;
+	local bool bChangeAllLevels;
 
-	id = StringToName(actOwner);
+	Song = Music(DynamicLoadObject(actArgs, Class'Music'));
+	SongSection = 1;
+	CdTrack = 255;
+	bChangeAllLevels = true;
 
-	mo = Music(DynamicLoadObject(actArgs, Class'Music'));
-	if (mo != None) {
-		// spawn a MusicEvent actor, populate the fields and trigger it
-		me = Spawn(class'MusicEvent', Self);
-		if (me != None) {
-			me.Tag = id;
-			me.Song = mo;
-			tr = Spawn(class'Trigger', Self);
-			if (tr != None) {
-				tr.Event = id;
-				tr.Trigger(Self, None);
-				log(mo$"; "$me$"; "$tr$"; "$id);
-				return true;
-			}
-		}
+	if (Song != None) {
+		log('[RTTIUnreal] Loaded music: '$Song);		
+      	ForEach AllActors(Class'PlayerPawn',LocalPlayer) {
+            if( LocalPlayer != None ) {
+				if(LocalPlayer.Player != None) {
+					if(Song != None) {
+						log('[RTTIUnreal] Setting music: '$Song);		
+						LocalPlayer.ClientSetMusic( Song, 1, 255, MTRAN_Instant );
+					}
+				}
+            }
+      	}
+
+		return true;
 	} else {
 		return false;
-	}	
+	}
 }
 
 // Helper methods
@@ -201,4 +213,9 @@ function string ParseDelimited(string Text, string Delimiter, int Count, optiona
 	}
 
 	return Result;
+}
+
+defaultproperties
+{
+	RemoteRole=ROLE_SimulatedProxy
 }

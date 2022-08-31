@@ -4,6 +4,7 @@ var string Queue[255];
 var int ActNum;
 
 function PreBeginPlay() {
+    bHidden = true;
     ActNum = 0;
 }
 
