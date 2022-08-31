@@ -84,9 +84,9 @@ function RunAct(string actOwner, string actName, string actArgs) {
 		case "change_music":
 			isActSuccessful = (ChangeMusic(actOwner, actArgs));
 			break;
-		// case "spawn_earthquake":
-		// 	isActSuccessful = (SpawnEarthquake(actOwner, actArgs));
-		// 	break;
+		case "spawn_item":
+			isActSuccessful = (SpawnItem(actOwner, actArgs));
+			break;
 		// case "kill_monsters":
 		// 	isActSuccessful = (KillMonsters(actOwner, actArgs));
 		// 	break;
@@ -135,12 +135,42 @@ function bool SpawnMonster(string actOwner, string actArgs) {
 			// Spawn(class'Unrealshare.TeleportEffect', self, , SpawnPoint);
 			// modify pawn props here
 			// NewMonster.Health = NewMonster.default.Health * class'MonsterCycle'.default.HealthMultiplier;
+			NewMonster.NameArticle = actOwner$"'s"$" ";
 			NewMonster.GotoState('Wandering');
 			break;			
 		}
 	}
 
 	return isMonsterSpawned;
+}
+
+function bool SpawnItem(string actOwner, string actArgs) {
+	local int i;
+	local Pickup NewPickup;
+	local bool isItemSpawned;
+	local bool bActivate;
+	local vector SpawnPoint;
+	local class<Pickup> PickupClass;
+
+	isItemSpawned = false;
+	bActivate = false;
+	
+	log(GetRandomPlayer());
+
+	return false;
+
+	//PickupClass = actArgs;
+
+	// NewPickup = Spawn(PickupClass,,, Location);
+	// if (NewPickup == none)
+	// 	return isItemSpawned;
+	// NewPickup.LifeSpan = NewPickup.default.LifeSpan; // prevents destruction when spawning in destructive zones
+	// NewPickup.GiveTo(Player);
+	// if (NewPickup.bActivatable && Player.SelectedItem == none)
+	// 	Player.SelectedItem = NewPickup;
+	// if (bActivate)
+	// 	NewPickup.Activate();
+	// NewPickup.PickupFunction(Player);
 }
 
 // doesn't work
@@ -180,6 +210,27 @@ function vector GetSpawnPoint() {
 	return spawnPointCandidates[Rand(Min(32,spawnPoints))].Location;
 }
 
+function Pawn GetRandomPlayer() {
+	local Pawn curr,winner;
+	local int Score,highScore;
+
+	//choose candidates
+	ForEach AllActors(Class'Pawn', curr ) {
+		if (curr.IsA('Bots') || curr.IsA('PlayerPawn')) {
+			Score = Rand(100); // Randomize base scoring.
+			if( curr.health <= 0 ) {
+				Score-=10000;
+			}
+			if( winner==None || Score>highScore ) {
+				winner = curr;
+				highScore = Score;
+			}
+		}
+	}	
+
+	return winner;
+}
+
 // shamelessly yanked from UBrowserBufferedTcpLink
 function string ParseDelimited(string Text, string Delimiter, int Count, optional bool bToEndOfLine)
 {
@@ -217,5 +268,5 @@ function string ParseDelimited(string Text, string Delimiter, int Count, optiona
 
 defaultproperties
 {
-	RemoteRole=ROLE_SimulatedProxy
+	//RemoteRole=ROLE_SimulatedProxy
 }
