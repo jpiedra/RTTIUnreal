@@ -145,32 +145,41 @@ function bool SpawnMonster(string actOwner, string actArgs) {
 }
 
 function bool SpawnItem(string actOwner, string actArgs) {
-	local int i;
-	local Pickup NewPickup;
+	local class<Inventory> InventoryClass;
+	local Inventory NewInventory;
+	local Pawn randomPlayer;
 	local bool isItemSpawned;
 	local bool bActivate;
-	local vector SpawnPoint;
-	local class<Pickup> PickupClass;
 
 	isItemSpawned = false;
 	bActivate = false;
 	
-	log(GetRandomPlayer());
+	randomPlayer = GetRandomPlayer();
+	log("[RTTIUnreal] Trying to find random player for act 'spawn_item'...");
+	if (randomPlayer != None) {
+		log("[RTTIUnreal] Found player "$randomPlayer.Name$", trying to load Inventory class of type '"$actArgs$"'");
+		InventoryClass = class<Inventory>(DynamicLoadObject(actArgs,class'Class'));
+		if (InventoryClass == none)
+			return isItemSpawned;
 
-	return false;
+		log("[RTTIUnreal] Loaded Inventory class "$InventoryClass$", now trying to spawn it...");
 
-	//PickupClass = actArgs;
+		NewInventory = Spawn(InventoryClass,,, randomPlayer.Location);
+		
+		if (NewInventory != None) {
+			log("[RTTIUnreal] Spawned item "$NewInventory$ " and trying to assign to player...");
 
-	// NewPickup = Spawn(PickupClass,,, Location);
-	// if (NewPickup == none)
-	// 	return isItemSpawned;
-	// NewPickup.LifeSpan = NewPickup.default.LifeSpan; // prevents destruction when spawning in destructive zones
-	// NewPickup.GiveTo(Player);
-	// if (NewPickup.bActivatable && Player.SelectedItem == none)
-	// 	Player.SelectedItem = NewPickup;
-	// if (bActivate)
-	// 	NewPickup.Activate();
-	// NewPickup.PickupFunction(Player);
+			NewInventory.LifeSpan = NewInventory.default.LifeSpan; // prevents destruction when spawning in destructive zones (thanks Waffnuffly)
+			NewInventory.Touch(randomPlayer); // make the item register a touch immediately with the randomly selected player
+			if (bActivate) {
+				NewInventory.Activate();
+			}
+
+			isItemSpawned = true;
+		}
+	}
+
+	return isItemSpawned;
 }
 
 // doesn't work
