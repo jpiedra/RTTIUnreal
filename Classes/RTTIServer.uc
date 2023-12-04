@@ -3,11 +3,17 @@
  * Based on TcpLink example classes: https://docs.unrealengine.com/udk/Three/TcpLink.html
  * Original by Michiel 'elmuerte' Hendriks for Epic Games, Inc.
  */
-class RTTIServer extends TcpLink;
+class RTTIServer extends TcpLink config(RTTIUnreal);
 
-var int ListenPort;
-var int MaxClients;
+var() config int ListenPort;
+var() config int MaxClients;
 var int NumClients;
+
+event PreBeginPlay()
+{
+	// write the config file
+	SaveConfig();
+}
 
 event PostBeginPlay()
 {
@@ -57,7 +63,6 @@ event LostChild( Actor C )
  		Listen();
 	}
 }
-
 
 defaultproperties
 {

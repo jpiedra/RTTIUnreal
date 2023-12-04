@@ -1,11 +1,11 @@
 class RTTIUnreal expands Mutator config(RTTIUnreal);
 
+var() config int MaxAttempts;
+
 var RTTIServer rttiServer;
 var RTTIActQueue rttiActQueue;
-
 var NavigationPoint spawnPointCandidates[32];
 var int spawnPoints;
-var int spawnAttempts;
 
 // Gameloop and timer
 function PreBeginPlay() {
@@ -13,6 +13,9 @@ function PreBeginPlay() {
 	Level.Game.bHumansOnly = false;
 	Level.Game.bNoMonsters = false;
 	SetTimer(5, True);
+
+	// write the config file
+	SaveConfig();
 }
 
 function PostBeginPlay() {
@@ -23,7 +26,7 @@ function PostBeginPlay() {
 	Super.PostBeginPlay();
 	rttiActQueue = Spawn(class'RTTIUnreal.RTTIActQueue', Self);
 	rttiServer = Spawn(class'RTTIUnreal.RTTIServer', Self);
-	spawnAttempts = 5; // configure via .ini
+
     if (rttiActQueue != None && rttiServer != None) {
 		log('[RTTIUnreal] Successfully spawned Server and ActQueue instances');
 	}
@@ -39,7 +42,6 @@ function PostBeginPlay() {
 	bAlwaysRelevant = true;
 	if(Level.Netmode == NM_DedicatedServer)
 		return;
-
 }
 
 function Timer() {
@@ -81,18 +83,9 @@ function RunAct(string actOwner, string actName, string actArgs) {
 		case "spawn_monster":		
 			isActSuccessful = (SpawnMonster(actOwner, actArgs));
 			break;
-		case "change_music":
-			isActSuccessful = (ChangeMusic(actOwner, actArgs));
-			break;
 		case "spawn_item":
 			isActSuccessful = (SpawnItem(actOwner, actArgs));
 			break;
-		// case "kill_monsters":
-		// 	isActSuccessful = (KillMonsters(actOwner, actArgs));
-		// 	break;
-		// case "kill_all":
-		// 	isActSuccessful = (KillAll(actOwner, actArgs));
-		// 	break;
 		default:
 			log("[RTTIUnreal] No act named '"$actName$"' exists!");
 			break;
@@ -122,8 +115,8 @@ function bool SpawnMonster(string actOwner, string actArgs) {
 		return isMonsterSpawned;
 	}
 
-	for (i = 0; i < spawnAttempts; i++) {	
-		log("[RTTIUnreal] Trying to spawn "$MonsterClass$ " - attempt "$i+1);
+	for (i = 0; i < MaxAttempts; i++) {	
+		log("[RTTIUnreal] Trying to spawn "$MonsterClass$ " - attempt "$i+1$" (max attempts: "$MaxAttempts$")");
 		SpawnPoint = GetSpawnPoint();
 		NewMonster = Spawn(MonsterClass,self,,SpawnPoint);
 		if (NewMonster != None) {
@@ -131,10 +124,6 @@ function bool SpawnMonster(string actOwner, string actArgs) {
 			isMonsterSpawned = true;
 			// try to spawn special effect
 			SpawnEffect = Spawn(class'UnrealShare.PawnTeleportEffect');
-			// how to spawn an effect???
-			// Spawn(class'Unrealshare.TeleportEffect', self, , SpawnPoint);
-			// modify pawn props here
-			// NewMonster.Health = NewMonster.default.Health * class'MonsterCycle'.default.HealthMultiplier;
 			NewMonster.NameArticle = actOwner$"'s"$" ";
 			NewMonster.GotoState('Wandering');
 			break;			
@@ -157,7 +146,7 @@ function bool SpawnItem(string actOwner, string actArgs) {
 	randomPlayer = GetRandomPlayer();
 	log("[RTTIUnreal] Trying to find random player for act 'spawn_item'...");
 	if (randomPlayer != None) {
-		log("[RTTIUnreal] Found player "$randomPlayer.Name$", trying to load Inventory class of type '"$actArgs$"'");
+		log("[RTTIUnreal] Found player "$randomPlayer.GetHumanName()$", trying to load Inventory class of type '"$actArgs$"'");
 		InventoryClass = class<Inventory>(DynamicLoadObject(actArgs,class'Class'));
 		if (InventoryClass == none)
 			return isItemSpawned;
@@ -169,7 +158,8 @@ function bool SpawnItem(string actOwner, string actArgs) {
 		if (NewInventory != None) {
 			log("[RTTIUnreal] Spawned item "$NewInventory$ " and trying to assign to player...");
 
-			NewInventory.LifeSpan = NewInventory.default.LifeSpan; // prevents destruction when spawning in destructive zones				
+			NewInventory.LifeSpan = NewInventory.default.LifeSpan; // prevents destruction when spawning in destructive zones			
+			NewInventory.RespawnTime=0; // never respawn, to prevent it getting left in the map as a pickup
 			NewInventory.Touch(randomPlayer); // make the item register a touch immediately with the randomly selected player
 			
 			isItemSpawned = true;
@@ -177,38 +167,6 @@ function bool SpawnItem(string actOwner, string actArgs) {
 	}
 
 	return isItemSpawned;
-}
-
-// doesn't work
-function bool ChangeMusic(string actOwner, string actArgs) {
-	local Music Song;
-	local byte SongSection; 
-	local byte CdTrack; // unused
-	local PlayerPawn LocalPlayer;
-	local bool bChangeAllLevels;
-
-	Song = Music(DynamicLoadObject(actArgs, Class'Music'));
-	SongSection = 1;
-	CdTrack = 255;
-	bChangeAllLevels = true;
-
-	if (Song != None) {
-		log('[RTTIUnreal] Loaded music: '$Song);		
-      	ForEach AllActors(Class'PlayerPawn',LocalPlayer) {
-            if( LocalPlayer != None ) {
-				if(LocalPlayer.Player != None) {
-					if(Song != None) {
-						log('[RTTIUnreal] Setting music: '$Song);		
-						LocalPlayer.ClientSetMusic( Song, 1, 255, MTRAN_Instant );
-					}
-				}
-            }
-      	}
-
-		return true;
-	} else {
-		return false;
-	}
 }
 
 // Helper methods
@@ -222,11 +180,11 @@ function Pawn GetRandomPlayer() {
 
 	//choose candidates
 	ForEach AllActors(Class'Pawn', curr ) {
-		if (curr.IsA('Bots') || curr.IsA('PlayerPawn')) {
+		if ( curr.bIsPlayer && curr.Health > 0 && !curr.bHidden && curr.Mesh != None ){
 			Score = Rand(100); // Randomize base scoring.
-			if( curr.health <= 0 ) {
-				Score-=10000;
-			}
+			//if( curr.health <= 0 ) {
+			//	Score-=10000;
+			//}
 			if( winner==None || Score>highScore ) {
 				winner = curr;
 				highScore = Score;
@@ -272,7 +230,7 @@ function string ParseDelimited(string Text, string Delimiter, int Count, optiona
 	return Result;
 }
 
-defaultproperties
+defaultproperties 
 {
-	//RemoteRole=ROLE_SimulatedProxy
+	MaxAttempts=5
 }

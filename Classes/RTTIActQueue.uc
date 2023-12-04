@@ -1,4 +1,4 @@
-class RTTIActQueue expands Actor config(RTTIUnreal);
+class RTTIActQueue expands Actor;
 
 var string Queue[255];
 var int ActNum;
